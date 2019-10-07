@@ -103,13 +103,13 @@ def gelu(x):
 class Attention(nn.Module):
     def __init__(self, nx, n_ctx, config, scale=False):
         super(Attention, self).__init__()
-        self.output_attentions = config.output_attentions
+        self.output_attentions = True #config.output_attentions
 
         n_state = nx  # in Attention: n_state=768 (nx=n_embd)
         # [switch nx => n_state from Block to Attention to keep identical to TF implem]
-        assert n_state % config.n_head == 0
+        assert n_state % config.num_attention_heads == 0
         self.register_buffer("bias", torch.tril(torch.ones(n_ctx, n_ctx)).view(1, 1, n_ctx, n_ctx))
-        self.n_head = config.n_head
+        self.n_head = config.num_attention_heads #n_head
         self.split_size = n_state
         self.scale = scale
 
@@ -121,8 +121,8 @@ class Attention(nn.Module):
         
         
         self.c_proj = Conv1D(n_state, nx)
-        self.attn_dropout = nn.Dropout(config.attn_pdrop)
-        self.resid_dropout = nn.Dropout(config.resid_pdrop)
+        self.attn_dropout = nn.Dropout(config.attention_probs_dropout_prob)
+        self.resid_dropout = nn.Dropout(config.hidden_dropout_prob)
         self.pruned_heads = set()
 
     def prune_heads(self, heads):
@@ -236,7 +236,7 @@ class Attention(nn.Module):
 class residual_MLP(nn.Module):
     def __init__(self, n_state, config):  # in MLP: n_state=3072 (4 * n_embd)
         super(MLP, self).__init__()
-        nx = config.n_embd
+        nx = config.hidden_size #.n_embd
 #        self.c_fc = Conv1D(n_state, nx)
 #        self.c_proj = Conv1D(nx, n_state)
         
@@ -244,9 +244,9 @@ class residual_MLP(nn.Module):
         self.act = gelu
         self.linear_intermediate = nn.Linear(n_state, nx) 
         self.linear_output = nn.Linear(nx,n_state)
-        self.ln_0 = nn.LayerNorm(nx, eps=config.layer_norm_epsilon)
-        self.ln_1 = nn.LayerNorm(nx, eps=config.layer_norm_epsilon)
-        self.dropout = nn.Dropout(config.resid_pdrop)
+        self.ln_0 = nn.LayerNorm(nx, eps=1e-5)#config.layer_norm_epsilon)
+        self.ln_1 = nn.LayerNorm(nx, eps=1e-5)#config.layer_norm_epsilon)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)#resid_pdrop)
 
 
     def forward(self, x):
@@ -265,19 +265,19 @@ class residual_MLP(nn.Module):
         return layer_output 
 
 
-class MLP(nn.Module):
-    def __init__(self, n_state, config):  # in MLP: n_state=3072 (4 * n_embd)
-        super(MLP, self).__init__()
-        nx = config.n_embd
-        self.c_fc = Conv1D(n_state, nx)
-        self.c_proj = Conv1D(nx, n_state)
-        self.act = gelu
-        self.dropout = nn.Dropout(config.resid_pdrop)
-
-    def forward(self, x):
-        h = self.act(self.c_fc(x))
-        h2 = self.c_proj(h)
-        return self.dropout(h2)
+#class MLP(nn.Module):
+#    def __init__(self, n_state, config):  # in MLP: n_state=3072 (4 * n_embd)
+#        super(MLP, self).__init__()
+#        nx = config.n_embd
+#        self.c_fc = Conv1D(n_state, nx)
+#        self.c_proj = Conv1D(nx, n_state)
+#        self.act = gelu
+#        self.dropout = nn.Dropout(config.resid_pdrop)
+#
+#    def forward(self, x):
+#        h = self.act(self.c_fc(x))
+#        h2 = self.c_proj(h)
+#        return self.dropout(h2)
 
 
 # !!! todo combine PT_1 + PT_2
@@ -286,7 +286,7 @@ class MLP(nn.Module):
 class Block(nn.Module):
     def __init__(self, n_ctx, config, scale=False):
         super(Block, self).__init__()
-        nx = config.n_embd
+        nx = config.hidden_size #n_embd
 #        self.ln_1 = nn.LayerNorm(nx, eps=config.layer_norm_epsilon)
         
         # !!! PT_2
@@ -315,28 +315,28 @@ class Block(nn.Module):
     
     
 
-class Block_old(nn.Module):
-    def __init__(self, n_ctx, config, scale=False):
-        super(Block, self).__init__()
-        nx = config.n_embd
-        self.ln_1 = nn.LayerNorm(nx, eps=config.layer_norm_epsilon)
-        self.attn = Attention(nx, n_ctx, config, scale)
-        self.ln_2 = nn.LayerNorm(nx, eps=config.layer_norm_epsilon)
-        self.mlp = MLP(4 * nx, config)
-
-    def forward(self, x, layer_past=None, attention_mask=None, head_mask=None):
-        output_attn = self.attn(self.ln_1(x),
-                                layer_past=layer_past,
-                                attention_mask=attention_mask,
-                                head_mask=head_mask)
-        a = output_attn[0]  # output_attn: a, present, (attentions)
-
-        x = x + a
-        m = self.mlp(self.ln_2(x))
-        x = x + m
-
-        outputs = [x] + output_attn[1:]
-        return outputs  # x, present, (attentions)
+#class Block_old(nn.Module):
+#    def __init__(self, n_ctx, config, scale=False):
+#        super(Block, self).__init__()
+#        nx = config.n_embd
+#        self.ln_1 = nn.LayerNorm(nx, eps=config.layer_norm_epsilon)
+#        self.attn = Attention(nx, n_ctx, config, scale)
+#        self.ln_2 = nn.LayerNorm(nx, eps=config.layer_norm_epsilon)
+#        self.mlp = MLP(4 * nx, config)
+#
+#    def forward(self, x, layer_past=None, attention_mask=None, head_mask=None):
+#        output_attn = self.attn(self.ln_1(x),
+#                                layer_past=layer_past,
+#                                attention_mask=attention_mask,
+#                                head_mask=head_mask)
+#        a = output_attn[0]  # output_attn: a, present, (attentions)
+#
+#        x = x + a
+#        m = self.mlp(self.ln_2(x))
+#        x = x + m
+#
+#        outputs = [x] + output_attn[1:]
+#        return outputs  # x, present, (attentions)
 
 
 class GroverPreTrainedModel(PreTrainedModel):
@@ -445,14 +445,14 @@ class GroverModel(GroverPreTrainedModel):
     """
     def __init__(self, config):
         super(GroverModel, self).__init__(config)
-        self.output_hidden_states = config.output_hidden_states
-        self.output_attentions = config.output_attentions
+        self.output_hidden_states = True #config.output_hidden_states
+        self.output_attentions = True #config.output_attentions
 
         self.wte = nn.Embedding(config.vocab_size, config.n_embd)
-        self.wpe = nn.Embedding(config.n_positions, config.n_embd)
-        self.drop = nn.Dropout(config.embd_pdrop)
-        self.h = nn.ModuleList([Block(config.n_ctx, config, scale=True) for _ in range(config.n_layer)])
-        self.ln_f = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon)
+        self.wpe = nn.Embedding(config.max_position_embeddings, config.hidden_size)#  n_positions, config.n_embd)
+        self.drop = nn.Dropout(config.hidden_dropout_prob) #embd_pdrop)
+        self.h = nn.ModuleList([Block(config.n_ctx, config, scale=True) for _ in range(config.num_hidden_layers)])# n_layer)])
+        self.ln_f = nn.LayerNorm(config.n_embd, eps=1e-5)#config.layer_norm_epsilon)
 
         self.init_weights()
 
@@ -509,12 +509,12 @@ class GroverModel(GroverPreTrainedModel):
         if head_mask is not None:
             if head_mask.dim() == 1:
                 head_mask = head_mask.unsqueeze(0).unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
-                head_mask = head_mask.expand(self.config.n_layer, -1, -1, -1, -1)
+                head_mask = head_mask.expand(self.config.num_hidden_layers , -1, -1, -1, -1) #n_layer, -1, -1, -1, -1)
             elif head_mask.dim() == 2:
                 head_mask = head_mask.unsqueeze(1).unsqueeze(-1).unsqueeze(-1)  # We can specify head_mask for each layer
             head_mask = head_mask.to(dtype=next(self.parameters()).dtype) # switch to fload if need + fp16 compatibility
         else:
-            head_mask = [None] * self.config.n_layer
+            head_mask = [None] * self.config.num_hidden_layers #.n_layer
 
         inputs_embeds = self.wte(input_ids)
         position_embeds = self.wpe(position_ids)
@@ -608,7 +608,7 @@ class GroverLMHeadModel(GroverPreTrainedModel):
     def __init__(self, config):
         super(GroverLMHeadModel, self).__init__(config)
         self.transformer = GroverModel(config)
-        self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
+        self.lm_head = nn.Linear(config.num_hidden_layers, config.vocab_size, bias=False)#.n_embd, config.vocab_size, bias=False)
 
         self.init_weights()
         self.tie_weights()
