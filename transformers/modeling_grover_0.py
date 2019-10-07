@@ -451,7 +451,7 @@ class GroverModel(GroverPreTrainedModel):
         self.wte = nn.Embedding(config.vocab_size, config.hidden_size)#config.n_embd)
         self.wpe = nn.Embedding(config.max_position_embeddings, config.hidden_size)#  n_positions, config.n_embd)
         self.drop = nn.Dropout(config.hidden_dropout_prob) #embd_pdrop)
-        self.h = nn.ModuleList([Block(config.n_ctx, config, scale=True) for _ in range(config.num_hidden_layers)])# n_layer)])
+        self.h = nn.ModuleList([Block(config.max_position_embeddings, config, scale=True) for _ in range(config.num_hidden_layers)]) #.n_ctx, config, scale=True) for _ in range(config.num_hidden_layers)])# n_layer)])
         self.ln_f = nn.LayerNorm(config.n_embd, eps=1e-5)#config.layer_norm_epsilon)
 
         self.init_weights()
