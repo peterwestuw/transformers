@@ -607,6 +607,8 @@ class GroverLMHeadModel(GroverPreTrainedModel):
     """
     def __init__(self, config):
         super(GroverLMHeadModel, self).__init__(config)
+        self.config.pruned_heads = False
+        
         self.transformer = GroverModel(config)
         self.lm_head = nn.Linear(config.num_hidden_layers, config.vocab_size, bias=False)#.n_embd, config.vocab_size, bias=False)
 
