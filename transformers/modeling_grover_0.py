@@ -235,7 +235,7 @@ class Attention(nn.Module):
 # todo PT_3 (mlp block)
 class residual_MLP(nn.Module):
     def __init__(self, n_state, config):  # in MLP: n_state=3072 (4 * n_embd)
-        super(MLP, self).__init__()
+        super(residual_MLP, self).__init__()
         nx = config.hidden_size #.n_embd
 #        self.c_fc = Conv1D(n_state, nx)
 #        self.c_proj = Conv1D(nx, n_state)
