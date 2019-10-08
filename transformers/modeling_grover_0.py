@@ -113,7 +113,7 @@ class Attention(nn.Module):
         self.split_size = n_state
         self.scale = scale
 
-        self.c_attn = Conv1D(n_state * 3, nx)
+        #self.c_attn = Conv1D(n_state * 3, nx)
         
         self.c_attn_q = Conv1D(n_state, nx)
         self.c_attn_k = Conv1D(n_state, nx)
@@ -197,7 +197,9 @@ class Attention(nn.Module):
             return x.permute(0, 2, 1, 3)  # (batch, head, seq_length, head_features)
 
     def forward(self, x, layer_past=None, attention_mask=None, head_mask=None):
-        x = self.c_attn(x)
+        
+        # this doesn't actually appear in Grover
+        #x = self.c_attn(x)
         
         # split into 3 (as in Grover) to make loading params simpler
         # query, key, value = x.split(self.split_size, dim=2) 
