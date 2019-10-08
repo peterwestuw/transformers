@@ -454,8 +454,8 @@ class GroverModel(GroverPreTrainedModel):
         self.wpe = nn.Embedding(config.max_position_embeddings, config.hidden_size)#  n_positions, config.n_embd)
         self.drop = nn.Dropout(config.hidden_dropout_prob) #embd_pdrop)
         self.h = nn.ModuleList([Block(config.max_position_embeddings, config, scale=True) for _ in range(config.num_hidden_layers)]) #.n_ctx, config, scale=True) for _ in range(config.num_hidden_layers)])# n_layer)])
-        self.ln_f = nn.LayerNorm(config.hidden_size, eps=1e-5)#config.layer_norm_epsilon)
-
+        self.ln_embed = nn.LayerNorm(config.hidden_size, eps=1e-5)#config.layer_norm_epsilon)
+        
         self.init_weights()
 
     def _resize_token_embeddings(self, new_num_tokens):
@@ -525,7 +525,8 @@ class GroverModel(GroverPreTrainedModel):
         else:
             token_type_embeds = 0
         hidden_states = inputs_embeds + position_embeds + token_type_embeds
-        hidden_states = self.drop(hidden_states)
+#        hidden_states = self.drop(hidden_states)
+        hidden_states = self.ln_embed(hidden_states)
 
         output_shape = input_shape + (hidden_states.size(-1),)
 
