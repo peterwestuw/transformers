@@ -236,7 +236,7 @@ class Attention(nn.Module):
 
 # todo PT_3 (mlp block)
 class residual_MLP(nn.Module):
-    def __init__(self, n_state, config):  # in MLP: n_state=3072 (4 * n_embd)
+    def __init__(self, intermediate_size, config):  # in MLP: n_state=3072 (4 * n_embd)
         super(residual_MLP, self).__init__()
         nx = config.hidden_size #.n_embd
 #        self.c_fc = Conv1D(n_state, nx)
@@ -244,8 +244,8 @@ class residual_MLP(nn.Module):
         
         
         self.act = gelu
-        self.linear_intermediate = nn.Linear(n_state, nx) 
-        self.linear_output = nn.Linear(nx,n_state)
+        self.linear_intermediate = nn.Linear(nx, intermediate_size) 
+        self.linear_output = nn.Linear(intermediate_size,nx)
         self.ln_0 = nn.LayerNorm(nx, eps=1e-5)#config.layer_norm_epsilon)
         self.ln_1 = nn.LayerNorm(nx, eps=1e-5)#config.layer_norm_epsilon)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)#resid_pdrop)
@@ -296,7 +296,7 @@ class Block(nn.Module):
 #        self.ln_2 = nn.LayerNorm(nx, eps=config.layer_norm_epsilon)
         
         # !!! PT_3
-        self.mlp = residual_MLP(4 * nx, config)
+        self.mlp = residual_MLP(config.intermediate_size, config)
 
     def forward(self, x, layer_past=None, attention_mask=None, head_mask=None):
         
