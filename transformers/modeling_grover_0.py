@@ -301,16 +301,16 @@ class Block(nn.Module):
     def forward(self, x, layer_past=None, attention_mask=None, head_mask=None):
         
         # PT_2
-        output_attn = self.attn(self.ln_1(x),
+        output_attn = self.attn(x, #self.ln_1(x),
                                 layer_past=layer_past,
                                 attention_mask=attention_mask,
                                 head_mask=head_mask)
         a = output_attn[0]  # output_attn: a, present, (attentions)
 
-        x = x + a
+        #x = x + a
         
         #PT_3
-        x = self.mlp(x)
+        x = self.mlp(x + a)
 
         outputs = [x] + output_attn[1:]
         return outputs  # x, present, (attentions)
