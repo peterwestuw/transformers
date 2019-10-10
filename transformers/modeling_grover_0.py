@@ -100,6 +100,7 @@ def load_pretrained_grover(config, grover_checkpoint_path):
     import os
     print(os.path.abspath(os.path.curdir))
     print(os.getcwd())
+    print(os.path.dirname(os.path.realpath(__file__)))
     if config is 'base':
         config = GroverConfig.from_json_file('./grover_configs/base.json')
     elif config is 'medium':
