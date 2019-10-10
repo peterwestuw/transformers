@@ -247,9 +247,9 @@ class Attention(nn.Module):
         
         
         # this was not included in Grover
-#        nd, ns = w.size(-2), w.size(-1)
-#        b = self.bias[:, :, ns-nd:ns, :ns]
-#        w = w * b - 1e4 * (1 - b)
+        nd, ns = w.size(-2), w.size(-1)
+        b = self.bias[:, :, ns-nd:ns, :ns]
+        w = w * b - 1e4 * (1 - b)
 
         # PT_2_3
         if attention_mask is not None:
