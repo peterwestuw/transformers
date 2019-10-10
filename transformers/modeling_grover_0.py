@@ -99,13 +99,13 @@ def load_tf_weights_in_gpt2(model, config, gpt2_checkpoint_path):
 def load_pretrained_grover(config, grover_checkpoint_path):
     
     if config is 'base':
-        config = GroverConfig.from_json_file('grover_configs/base.json')
+        config = GroverConfig.from_json_file('./grover_configs/base.json')
     elif config is 'medium':
-        config = GroverConfig.from_json_file('grover_configs/base.json')
+        config = GroverConfig.from_json_file('./grover_configs/medium.json')
     elif config is 'large':
-        config = GroverConfig.from_json_file('grover_configs/base.json')
+        config = GroverConfig.from_json_file('./grover_configs/large.json')
     elif config is 'mega':
-        config = GroverConfig.from_json_file('grover_configs/base.json')
+        config = GroverConfig.from_json_file('./grover_configs/mega.json')
     
     model = GroverLMHeadModel(config)
     
