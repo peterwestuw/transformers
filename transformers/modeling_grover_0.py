@@ -182,9 +182,12 @@ def load_tf_weights_in_grover(model, config, grover_checkpoint_path):
     return model
 
 
-def gelu(x):
+def gelu_old(x):
     return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
 
+def gelu(x):
+    cdf = 0.5 * (1.0 + torch.erf(x / math.sqrt(2.0)))
+    return x * cdf
 
 class Attention(nn.Module):
     def __init__(self, nx, n_ctx, config, scale=False):
