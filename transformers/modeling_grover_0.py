@@ -99,6 +99,7 @@ def load_tf_weights_in_gpt2(model, config, gpt2_checkpoint_path):
 def load_pretrained_grover(config, grover_checkpoint_path):
     import os
     print(os.path.abspath(os.path.curdir))
+    print(os.getcwd())
     if config is 'base':
         config = GroverConfig.from_json_file('./grover_configs/base.json')
     elif config is 'medium':
