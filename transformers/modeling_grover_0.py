@@ -96,6 +96,89 @@ def load_tf_weights_in_gpt2(model, config, gpt2_checkpoint_path):
     return model
 
 
+def load_pretrained_grover(config, grover_checkpoint_path):
+    
+    if config is 'base':
+        config = GroverConfig.from_json_file('grover_configs/base.json')
+    elif config is 'medium':
+        config = GroverConfig.from_json_file('grover_configs/base.json')
+    elif config is 'large':
+        config = GroverConfig.from_json_file('grover_configs/base.json')
+    elif config is 'mega':
+        config = GroverConfig.from_json_file('grover_configs/base.json')
+    
+    model = GroverLMHeadModel(config)
+    
+    load_tf_weights_in_grover(model, config, grover_checkpoint_path)
+        
+        
+def load_tf_weights_in_grover(model, config, grover_checkpoint_path):
+    """ Load tf checkpoints in a pytorch model
+    """
+    try:
+        import re
+        import numpy as np
+        import tensorflow as tf
+    except ImportError:
+        logger.error("Loading a TensorFlow model in PyTorch, requires TensorFlow to be installed. Please see "
+            "https://www.tensorflow.org/install/ for installation instructions.")
+        raise
+    tf_path = os.path.abspath(grover_checkpoint_path)
+    logger.info("Converting TensorFlow checkpoint from {}".format(tf_path))
+    # Load weights from TF model
+    def load_ln(ln_pytorch, path_var):
+        beta = tf.train.load_variable(tf_path, path_var + '/beta')
+        gamma = tf.train.load_variable(tf_path, path_var + '/gamma')
+        #!!! load into var
+        ln_pytorch.weight.data = torch.from_numpy(gamma) 
+        ln_pytorch.bias.data = torch.from_numpy(beta)
+        
+    def load_conv1d(conv1d_pytorch, path_var):
+        bias = tf.train.load_variable(tf_path, path_var + '/bias')
+        kernel = tf.train.load_variable(tf_path, path_var + '/kernel')
+        
+        conv1d_pytorch.weight.data = torch.from_numpy(kernel)
+        conv1d_pytorch.bias.data = torch.from_numpy(bias)
+        
+    
+    def load_linear(linear_pytorch, path_var):
+        bias = tf.train.load_variable(tf_path, path_var + '/bias')
+        kernel = tf.train.load_variable(tf_path, path_var + '/kernel')
+        linear_pytorch.weight.data = torch.from_numpy(kernel).transpose(0,1)
+        linear_pytorch.bias.data = torch.from_numpy(bias)
+        
+    def load_embed(embed_pytorch, path_var):
+        w = tf.train.load_variable(tf_path, path_var)
+        
+        embed_pytorch.weight.data = torch.from_numpy(w)
+    
+    
+    load_embed(model.transformer.wte,'newslm/embeddings/word_embed')
+    load_embed(model.transformer.wpe,'newslm/embeddings/pos_embed')
+    
+    for i, block in enumerate(model.transformer.h):
+        # Load all 16 block parameters (8 components...)
+        path_var = 'newslm/layer{:02d}'.format(i)
+        
+        load_linear(block.mlp.linear_intermediate, path_var+'/intermediate')
+        
+        load_linear(block.mlp.linear_output, path_var+'/output')
+        
+        load_ln(block.mlp.ln_0, path_var+'/LayerNorm_mlp_ln0')
+        
+        load_ln(block.mlp.ln_1, path_var+'/LayerNorm_mlp_ln1')
+        
+                    
+        load_conv1d(block.attn.c_attn_q, path_var+'/query_layer')
+        
+        load_conv1d(block.attn.c_attn_k, path_var+'/key_layer')
+        
+        load_conv1d(block.attn.c_attn_v, path_var+'/value_layer')
+        
+        load_conv1d(block.attn.c_proj, path_var+'/context_projection_layer')
+    return model
+
+
 def gelu(x):
     return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
 
