@@ -112,6 +112,7 @@ def load_pretrained_grover(config, grover_checkpoint_path):
     model = GroverLMHeadModel(config)
     
     load_tf_weights_in_grover(model, config, grover_checkpoint_path)
+    return model
         
         
 def load_tf_weights_in_grover(model, config, grover_checkpoint_path):
