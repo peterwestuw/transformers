@@ -108,6 +108,10 @@ def load_pretrained_grover(config, grover_checkpoint_path):
         config = GroverConfig.from_json_file(file_path+'/grover_configs/large.json')
     elif config is 'mega':
         config = GroverConfig.from_json_file(file_path+'/grover_configs/mega.json')
+    elif config is 'opengpt2_padded':
+        config = GroverConfig.from_json_file(file_path+'/grover_configs/opengpt2_padded.json')
+    else:
+        config = GroverConfig.from_json_file(config)
     
     model = GroverLMHeadModel(config)
     
