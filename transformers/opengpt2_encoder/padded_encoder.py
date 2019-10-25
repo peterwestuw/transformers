@@ -20,7 +20,7 @@ class encoder():
         return [t + 1 for t in self.encoder.encode(text)]
     
     def decode(self, tokens):
-        tokens_shifted = [t for t in tokens if t !=0 ]
+        tokens_shifted = [t - 1 for t in tokens if t !=0 ]
         if len(tokens_shifted) != len(tokens):
             print('WARNING: padding removed from sequence during decoding')
             
