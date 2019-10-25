@@ -8,7 +8,7 @@ Created on Fri Oct 25 16:03:52 2019
 from transformers.tokenization_gpt2 import GPT2Tokenizer
 
 
-class encoder():
+class Encoder():
     def __init__(self):
         self.encoder = GPT2Tokenizer.from_pretrained('gpt2')
         
