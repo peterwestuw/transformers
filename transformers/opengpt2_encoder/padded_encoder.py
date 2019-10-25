@@ -12,8 +12,8 @@ class encoder():
     def __init__(self):
         self.encoder = GPT2Tokenizer.from_pretrained('gpt2')
         
-        assert(len(self.encoder('<|endoftext|>')) ==1 )
-        self.endoftext = self.encoder('<|endoftext|>')[0]
+        assert(len(self.encoder.encode('<|endoftext|>')) ==1 )
+        self.endoftext = self.encoder.encode('<|endoftext|>')[0]
         self.padding = 0
         
     def encode(self, text):
