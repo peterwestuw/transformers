@@ -24,6 +24,6 @@ class encoder():
         if len(tokens_shifted) != len(tokens):
             print('WARNING: padding removed from sequence during decoding')
             
-        return encoder.decode(tokens_shifted)
+        return self.encoder.decode(tokens_shifted)
         
         
